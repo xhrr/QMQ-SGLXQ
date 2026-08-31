@@ -915,6 +915,56 @@ a {
     color: var(--fg-20);
 }
 
+/** 免责声明：悬停/聚焦/点击展开全文 */
+.footer__disclaimer {
+    position: relative;
+    display: inline-block;
+    margin: 1rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    text-align: left;
+}
+.footer__disclaimer-trigger {
+    cursor: help;
+    color: var(--fg-40);
+    padding-bottom: 0.15rem;
+    border-bottom: 1px dashed var(--fg-20);
+    transition: color 0.3s, border-color 0.3s;
+}
+.footer__disclaimer-trigger:hover,
+.footer__disclaimer-trigger:focus-visible {
+    color: var(--fg);
+    border-bottom-color: var(--fg-60);
+    outline: none;
+}
+.footer__disclaimer-tip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: max-content; /* 以最长行为宽度，避免被窄父容器压成竖柱 */
+    max-width: min(420px, 80vw);
+    padding: 0.85rem 1.1rem;
+    background: var(--bg);
+    border: 1px solid var(--fg-20);
+    color: var(--fg-60);
+    font-size: 0.78rem;
+    line-height: 1.75;
+    white-space: pre-line;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+.footer__disclaimer:hover .footer__disclaimer-tip,
+.footer__disclaimer:focus-within .footer__disclaimer-tip,
+.footer__disclaimer.is-open .footer__disclaimer-tip {
+    opacity: 1;
+    visibility: visible;
+}
+
 /* ===================================================================
    响应式
    =================================================================== */
