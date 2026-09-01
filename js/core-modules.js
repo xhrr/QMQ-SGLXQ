@@ -174,9 +174,9 @@ window.CMS.registerModule('hero', function (mod) {
         const albums = Array.isArray(gallery.albums) ? gallery.albums : [];
         const isPrimaryImages = C.modules.findIndex(m => m.type === 'images') === C.modules.indexOf(mod);
 
-        // 主写真模块：展示写真集封面（新增的在前）
+        // 主写真模块：展示写真集封面（新增的在前，保留原索引保证 ?album= 链接正确）
         if (isPrimaryImages && albums.length) {
-            const shown = albums.slice().reverse().slice(0, limit);
+            const shown = albums.map((a, i) => ({ a, i })).reverse().slice(0, limit);
             return `
 <section class="section gallery" id="gallery" data-module="images">
     <div class="section__head">
@@ -184,7 +184,7 @@ window.CMS.registerModule('hero', function (mod) {
         <h2 class="section__title">${esc(gallery.heading || label)}</h2>
     </div>
     <div class="gallery__albums">
-        ${shown.map((album, ai) => {
+        ${shown.map(({ a: album, i: ai }) => {
             const cover = safeUrl(album.cover || (album.images && album.images[0]), 'image');
             return `
                 <a class="album-card" href="/gallery.html?album=${ai}">
