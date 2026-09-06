@@ -19,6 +19,13 @@ window.SITE_CONFIG.comments = {
             "t": "回复测试",
             "d": "2026-09-06",
             "replyTo": "c-mtpvpnkk"
+        },
+        {
+            "id": "i-99",
+            "n": "杉果派三号机",
+            "t": "继续测试",
+            "d": "2026-09-06",
+            "replyTo": "i-98"
         }
     ]
 };
