@@ -19,6 +19,11 @@
         return Array.isArray(all[pageKey]) ? all[pageKey] : [];
     }
 
+    /** 评论功能总开关（后台「评论管理」一键关闭 → 导出注入 commentsEnabled=false → 全站零渲染） */
+    function commentsEnabled() {
+        return !(window.SITE_CONFIG && window.SITE_CONFIG.commentsEnabled === false);
+    }
+
     /** 组装两级楼中楼：主评论 + 其回复（回复的回复向上归入同一主评论，展示为 回复 @昵称） */
     function buildThreads(list) {
         const byId = {};
@@ -178,7 +183,7 @@
     }
 
     function render(pageKey, mountEl, position) {
-        if (!commentsFor(pageKey).length || !mountEl) return null;
+        if (!commentsEnabled() || !commentsFor(pageKey).length || !mountEl) return null;
         if (document.getElementById('commentsSection')) return null; // 防脚本顺序变化导致的双渲染
         state.pageKey = pageKey;
         mountEl.insertAdjacentHTML(position || 'afterend', sectionHtml());
