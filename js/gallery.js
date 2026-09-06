@@ -14,6 +14,8 @@
     const albumRef = params.get('album');
     const catIndex = params.get('cat');
     const workRef = params.get('work');
+    // 老链接兜底：无稳定 ID 的老作品走 ?cat=N&work=M 数字索引（page.js 仍会生成该格式），缺此解析会 ReferenceError 整页崩
+    const workIndex = workRef !== null && /^\d+$/.test(workRef) ? parseInt(workRef, 10) : null;
 
     const gallery = C.gallery || { heading: '写真', albums: [] };
     const albums = Array.isArray(gallery.albums) ? gallery.albums : [];

@@ -135,6 +135,13 @@
             return r.json();
         }).then(j => {
             try { localStorage.setItem(NICK_KEY, nickEl.value.trim()); } catch (e) { /* 隐私模式 */ }
+            if (j && j.pending) {
+                // 公共站待审通道（comment-gateway）：不落本地展示，等审批固化后的导出上线
+                state.replyTo = null; state.replyName = '';
+                ta.value = '';
+                hint.textContent = j.message || '留言已提交，审核通过后展示';
+                return;
+            }
             const all = (window.SITE_CONFIG.comments = window.SITE_CONFIG.comments || {});
             const list = all[state.pageKey] = all[state.pageKey] || [];
             list.push(j.comment);
@@ -172,6 +179,7 @@
 
     function render(pageKey, mountEl, position) {
         if (!commentsFor(pageKey).length || !mountEl) return null;
+        if (document.getElementById('commentsSection')) return null; // 防脚本顺序变化导致的双渲染
         state.pageKey = pageKey;
         mountEl.insertAdjacentHTML(position || 'afterend', sectionHtml());
         const section = document.getElementById('commentsSection');
