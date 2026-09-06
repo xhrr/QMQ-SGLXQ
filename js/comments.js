@@ -45,10 +45,9 @@
     const pad2 = n => String(n).padStart(2, '0');
     const fmtDate = d => String(d || '').replace(/-/g, '.');
 
-    function headHtml(num, c, ref) {
+    function headHtml(c, ref) {
         return `
             <div class="comment__head">
-                <span class="comment__num">${num}</span>
                 <span class="comment__name">${esc(c.n || '马铃薯')}</span>
                 ${ref ? `<span class="comment__ref">${esc(ref)}</span>` : ''}
                 <span class="comment__date">${fmtDate(c.d)}</span>
@@ -64,20 +63,26 @@
             const reps = replies[c.id] || [];
             return `
             <li class="comment">
-                ${headHtml(pad2(++num), c)}
-                <p class="comment__text">${esc(c.t)}</p>
-                ${reps.length ? `
-                <ul class="comment__replies">
-                    ${reps.map(r => {
-                        const parent = byId[r.replyTo];
-                        const ref = parent && parent.id !== c.id ? `回复 @${parent.n || '匿名'}` : '';
-                        return `
-                        <li class="comment comment--reply">
-                            ${headHtml(pad2(++num), r, ref)}
-                            <p class="comment__text">${esc(r.t)}</p>
-                        </li>`;
-                    }).join('')}
-                </ul>` : ''}
+                <span class="comment__num">${pad2(++num)}</span>
+                <div class="comment__main">
+                    ${headHtml(c)}
+                    <p class="comment__text">${esc(c.t)}</p>
+                    ${reps.length ? `
+                    <ul class="comment__replies">
+                        ${reps.map(r => {
+                            const parent = byId[r.replyTo];
+                            const ref = parent && parent.id !== c.id ? `回复 @${parent.n || '匿名'}` : '';
+                            return `
+                            <li class="comment comment--reply">
+                                <span class="comment__num">${pad2(++num)}</span>
+                                <div class="comment__main">
+                                    ${headHtml(r, ref)}
+                                    <p class="comment__text">${esc(r.t)}</p>
+                                </div>
+                            </li>`;
+                        }).join('')}
+                    </ul>` : ''}
+                </div>
             </li>`;
         };
         let nick = '';
