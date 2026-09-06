@@ -123,6 +123,23 @@
         }
     }
 
+    /** 轻弹窗反馈：比表单 hint 更明显（底部居中，3s 自动消退） */
+    let toastTimer = null;
+    function showToast(msg) {
+        let el = document.getElementById('commentsToast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'commentsToast';
+            el.className = 'comments-toast';
+            document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        void el.offsetWidth; // 强制回流，让重复触发时淡入过渡重新播放
+        el.classList.add('is-show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('is-show'), 3000);
+    }
+
     function submitForm(section) {
         const nickEl = section.querySelector('#commentNickname');
         const ta = section.querySelector('#commentContent');
@@ -149,7 +166,9 @@
                 // 公共站待审通道（comment-gateway）：不落本地展示，等审批固化后的导出上线
                 state.replyTo = null; state.replyName = '';
                 ta.value = '';
-                hint.textContent = j.message || '留言已提交，审核通过后展示';
+                const msg = j.message || '留言已提交，审核通过后展示';
+                hint.textContent = msg;
+                showToast(msg);
                 return;
             }
             const all = (window.SITE_CONFIG.comments = window.SITE_CONFIG.comments || {});
@@ -157,8 +176,10 @@
             list.push(j.comment);
             state.replyTo = null; state.replyName = '';
             rerender();
+            showToast('留言已发布');
         }).catch(() => {
             hint.textContent = '评论提交暂未开放，敬请期待';
+            showToast('评论提交暂未开放，敬请期待');
         });
     }
 
