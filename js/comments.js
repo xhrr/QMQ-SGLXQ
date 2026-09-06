@@ -196,9 +196,10 @@
     function autoInit() {
         const params = new URLSearchParams(window.location.search);
         const album = params.get('album');
-        const path = window.location.pathname.split('/').pop();
+        // 页面名去扩展名匹配：公共站（Pages）会把 /gallery.html 308 到 /gallery，写死 .html 永远不匹配（事故 14）
+        const path = (window.location.pathname.replace(/\/+$/, '').split('/').pop() || '').replace(/\.html?$/i, '');
         const grid = document.getElementById('galleryGrid');
-        if (path === 'gallery.html' && album !== null && grid) {
+        if (path === 'gallery' && album !== null && grid) {
             const albums = (window.SITE_CONFIG.gallery || {}).albums || [];
             const hit = albums.find(a => a.id && a.id === album) || (/^\d+$/.test(album) ? albums[+album] : null);
             if (hit && hit.id) render('album-' + hit.id, grid, 'afterend');
@@ -212,7 +213,7 @@
             if (hit) render('work-' + hit.id, grid, 'afterend');
             return;
         }
-        if (path === 'news.html') {
+        if (path === 'news') {
             const app = document.getElementById('app');
             if (app) render('news', app, 'beforeend');
         }
