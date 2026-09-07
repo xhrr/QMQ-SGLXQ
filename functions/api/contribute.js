@@ -19,7 +19,7 @@ const MAX_FILE_MB = 12;
 const REPO = 'xhrr/QMQ-SGLXQ';
 const PENDING_LABEL = 'content-pending';
 const PUBLIC_BASE = 'img.sglxq.cn';
-const KEY_PREFIX = 'fw/mqq';
+const KEY_PREFIX = 'img/mqq';
 
 const MAX_PER_WINDOW = 5;
 const WINDOW_MS = 10 * 60 * 1000;
