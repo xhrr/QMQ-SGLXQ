@@ -95,6 +95,49 @@
         renderThumbs();
     }
 
+    /* ---------- 拖拽上传（文件 + 文件夹递归） ---------- */
+
+    // 目录 entry 的 readEntries 每批最多 100 条，须循环读到空为止
+    function collectFilesFromEntry(entry, out) {
+        return new Promise(resolve => {
+            if (!entry) return resolve();
+            if (entry.isFile) {
+                entry.file(f => { out.push(f); resolve(); }, () => resolve());
+            } else if (entry.isDirectory) {
+                const reader = entry.createReader();
+                const batch = [];
+                const readBatch = () => reader.readEntries(async entries => {
+                    if (!entries.length) {
+                        for (const e of batch) await collectFilesFromEntry(e, out);
+                        resolve();
+                    } else {
+                        batch.push(...entries);
+                        readBatch();
+                    }
+                }, () => resolve());
+                readBatch();
+            } else resolve();
+        });
+    }
+
+    /** webkitGetAsEntry 必须在事件同步阶段全部取出（items 在 yield 后失效），返回处理 Promise */
+    function handleDrop(dataTransfer) {
+        const entries = [];
+        for (const item of dataTransfer.items || []) {
+            if (item.kind === 'file' && item.webkitGetAsEntry) {
+                const entry = item.webkitGetAsEntry();
+                if (entry) entries.push(entry);
+            }
+        }
+        if (!entries.length) {
+            // 无 entries 支持（极端老浏览器）：退化为普通文件列表
+            return addFiles(dataTransfer.files || []);
+        }
+        const files = [];
+        return entries.reduce((p, entry) => p.then(() => collectFilesFromEntry(entry, files)), Promise.resolve())
+            .then(() => addFiles(files));
+    }
+
     /* ---------- 提交 ---------- */
 
     function setBusy(busy, percent) {
@@ -184,6 +227,21 @@
         });
 
         $('contribPick').addEventListener('click', () => $('contribFiles').click());
+
+        // 拖拽上传：投放区 = 选择框；全页阻止浏览器默认打开行为
+        const pick = $('contribPick');
+        ['dragover', 'drop'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+        pick.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            pick.classList.add('is-drag');
+        });
+        pick.addEventListener('dragleave', () => pick.classList.remove('is-drag'));
+        pick.addEventListener('drop', e => {
+            e.preventDefault();
+            pick.classList.remove('is-drag');
+            handleDrop(e.dataTransfer);
+        });
         $('contribFiles').addEventListener('change', e => {
             addFiles(e.target.files);
             e.target.value = '';

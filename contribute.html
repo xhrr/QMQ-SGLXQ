@@ -114,6 +114,12 @@
             transition: border-color var(--dur-fast, 180ms) ease, color var(--dur-fast, 180ms) ease;
         }
         .contrib-pick:hover { border-color: var(--fg-40); color: var(--fg); }
+        .contrib-pick.is-drag {
+            border-style: solid;
+            border-color: var(--fg);
+            color: var(--fg);
+            background: var(--fg-10);
+        }
         .contrib-thumbs {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr));
@@ -274,7 +280,7 @@
 
                 <div class="contrib-field">
                     <label id="imgLabel">图片 *（最多 30 张，自动压缩为 webp）</label>
-                    <div class="contrib-pick" id="contribPick">点击选择图片（可多选）</div>
+                    <div class="contrib-pick" id="contribPick">点击选择图片（可多选），或拖拽文件 / 文件夹到此处</div>
                     <input type="file" id="contribFiles" accept="image/*" multiple style="display:none">
                     <div class="contrib-thumbs" id="contribThumbs"></div>
                     <p class="contrib-field__help">点击图片可设为封面（作品为海报）；上传到站内图床，格式自动转为 webp。</p>
