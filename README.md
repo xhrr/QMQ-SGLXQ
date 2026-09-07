@@ -38,7 +38,7 @@ type: album
 title: 写真集标题
 author: 摄影师 / 来源作者（必填）
 sourceUrl: https://example.com/original
-date:2025-03-01
+date: 2025-03-01
 cover: https://example.com/cover.jpg
 images:
   - https://example.com/photo1.jpg
