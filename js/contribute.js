@@ -134,9 +134,16 @@
     function submitForm() {
         const title = $('f-title').value.trim();
         if (!title) { showMsg('请填写标题', true); return; }
+        if (currentType === 'album' && !$('f-date').value) { showMsg('请选择发帖日期', true); return; }
         if (currentType === 'album' && !$('f-author').value.trim()) { showMsg('请填写作者 / 摄影师', true); return; }
         const sourceUrl = $('f-sourceUrl').value.trim();
         if (!/^https?:\/\//i.test(sourceUrl)) { showMsg('请填写原始链接（http/https 开头）', true); return; }
+        if (currentType === 'works') {
+            if (!$('f-category').value) { showMsg('请选择分类', true); return; }
+            if (!$('f-year').value.trim()) { showMsg('请填写年份', true); return; }
+            if (!$('f-role').value.trim()) { showMsg('请填写饰演角色', true); return; }
+            if (!$('f-synopsis').value.trim()) { showMsg('请填写简介', true); return; }
+        }
         if (!pendingFiles.length) { showMsg('请至少选择一张图片', true); return; }
 
         const fd = buildFormData();

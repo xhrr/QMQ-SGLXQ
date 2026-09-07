@@ -111,9 +111,15 @@ export async function onRequestPost({ request, env }) {
         sourceUrl: clean(form.get('sourceUrl'), 300)
     };
     if (!f.title) return json({ error: '标题必填' }, 400);
-    if (f.date && !/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return json({ error: '日期格式应为 YYYY-MM-DD' }, 400);
+    if (type === 'album' && !/^\d{4}-\d{2}-\d{2}$/.test(f.date)) return json({ error: '请选择发帖日期' }, 400);
     if (type === 'album' && !f.author) return json({ error: '请填写作者 / 摄影师' }, 400);
     if (!/^https?:\/\//i.test(f.sourceUrl)) return json({ error: '请填写原始链接（http/https 开头）' }, 400);
+    if (type === 'works') {
+        if (!f.category) return json({ error: '请选择分类' }, 400);
+        if (!f.year) return json({ error: '请填写年份' }, 400);
+        if (!f.role) return json({ error: '请填写饰演角色' }, 400);
+        if (!f.synopsis) return json({ error: '请填写简介' }, 400);
+    }
 
     const files = form.getAll('images').filter(v => v && typeof v === 'object' && typeof v.arrayBuffer === 'function');
     if (!files.length) return json({ error: '至少上传一张图片' }, 400);
