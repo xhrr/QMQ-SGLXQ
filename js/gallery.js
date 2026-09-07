@@ -151,6 +151,27 @@
     /* ---------- 写真集列表 ---------- */
 
     let gallerySearchQuery = '';
+    let galleryMonthFilter = '';
+
+    /** 日期展示：YYYY-MM-DD → YYYY.MM.DD（站内日期风格），无日期返回空 */
+    const fmtAlbumDate = d => String(d || '').replace(/-/g, '.');
+
+    /** 图集可用的月份列表（降序，聚合自有数据） */
+    function albumMonths() {
+        const set = new Set();
+        albums.forEach(a => { if (/^\d{4}-\d{2}/.test(String(a.date || ''))) set.add(String(a.date).slice(0, 7)); });
+        return [...set].sort().reverse();
+    }
+
+    /** 排序：基准=原有「新增在前」（数组倒序）；有日期的按日期降序提到前面，无日期垫底（保持新增在前次序） */
+    function sortAlbumEntries(entries) {
+        return entries.slice().reverse().sort((x, y) => {
+            const dx = String(x.a.date || ''), dy = String(y.a.date || '');
+            if (dx && dy && dx !== dy) return dx < dy ? 1 : -1;
+            if (dx !== dy) return dx ? -1 : 1;
+            return 0; // 同日期/同无日期：保持「新增在前」基准序（稳定排序）
+        });
+    }
 
     /** 详情页分享入口：复制链接（不生成海报） */
     function bindShareButton(btn) {
@@ -167,14 +188,21 @@
     function renderAlbumCards() {
         const q = gallerySearchQuery.trim().toLowerCase();
         const match = a => !q || [a.title, a.author].some(f => String(f || '').toLowerCase().includes(q));
-        // 新增的在前，保留原索引：卡片链接 ?album= 必须是 gallery.albums 的真实下标
-        const shown = albums.map((a, idx) => ({ a, idx })).reverse().filter(x => match(x.a));
+        const month = galleryMonthFilter;
+        // 保留原索引：卡片链接 ?album= 的数字兜底必须是 gallery.albums 的真实下标（排序/筛选后仍不变）
+        let shown = albums.map((a, idx) => ({ a, idx })).filter(x => match(x.a));
+        if (month) shown = shown.filter(x => String(x.a.date || '').slice(0, 7) === month);
+        shown = sortAlbumEntries(shown);
 
         const countEl = document.getElementById('gallery-search-count');
-        if (countEl) countEl.textContent = q ? (shown.length + ' / ' + albums.length + ' 个写真集') : '';
+        if (countEl) countEl.textContent = (q || month) ? (shown.length + ' / ' + albums.length + ' 个写真集') : '';
 
         if (q && !shown.length) {
             grid.innerHTML = '<p class="gallery-page__empty">未找到匹配的写真集</p>';
+            return;
+        }
+        if (month && !shown.length) {
+            grid.innerHTML = '<p class="gallery-page__empty">这个月份还没有写真集</p>';
             return;
         }
         if (!albums.length) {
@@ -185,6 +213,7 @@
             <div class="gallery__albums">
                 ${shown.map(({ a: album, idx: ai }) => {
                     const cover = safeUrl(album.cover || (album.images && album.images[0]), 'image');
+                    const dateTxt = fmtAlbumDate(album.date);
                     return `
                         <a class="album-card" href="/gallery.html?album=${album.id || ai}">
                             <div class="album-card__cover">
@@ -193,7 +222,7 @@
                             <div class="album-card__body">
                                 <h2 class="album-card__title">${esc(album.title || ('写真集 ' + (ai + 1)))}</h2>
                                 ${album.author ? `<span class="album-card__author">作者：${esc(album.author)}</span>` : ''}
-                                <span class="album-card__count">${(album.images || []).length} 张</span>
+                                <span class="album-card__count">${[(album.images || []).length + ' 张', dateTxt].filter(Boolean).join(' · ')}</span>
                             </div>
                         </a>
                     `;
@@ -216,7 +245,22 @@
                     <input type="search" id="gallery-search-input" placeholder="搜索写真集标题 / 作者…" autocomplete="off">
                     <span class="page-search__count" id="gallery-search-count"></span>
                 </div>
+                ${albumMonths().length ? `
+                <div class="gallery-months" id="gallery-months">
+                    <button type="button" class="gallery-months__chip${galleryMonthFilter === '' ? ' is-active' : ''}" data-month="">全部</button>
+                    ${albumMonths().map(m => `<button type="button" class="gallery-months__chip${galleryMonthFilter === m ? ' is-active' : ''}" data-month="${m}">${m.replace('-', '.')}</button>`).join('')}
+                </div>` : ''}
             `;
+            const monthsBox = document.getElementById('gallery-months');
+            if (monthsBox) {
+                monthsBox.addEventListener('click', e => {
+                    const chip = e.target.closest('[data-month]');
+                    if (!chip) return;
+                    galleryMonthFilter = chip.dataset.month;
+                    Array.prototype.forEach.call(monthsBox.querySelectorAll('.gallery-months__chip'), c => c.classList.toggle('is-active', c === chip));
+                    renderAlbumCards();
+                });
+            }
         }
         renderAlbumCards();
         const input = document.getElementById('gallery-search-input');
@@ -368,7 +412,7 @@
                 <div class="album-detail__head">
                     <a class="hover-underline" href="/gallery.html">← 返回写真集</a>
                     <h1 class="album-detail__title">${esc(album.title || ('写真集 ' + (ai + 1)))}</h1>
-                    <span class="album-detail__count">${images.length} 张</span>
+                    <span class="album-detail__count">${[(images.length + ' 张'), fmtAlbumDate(album.date)].filter(Boolean).join(' · ')}</span>
                     <button type="button" class="album-detail__share" id="albumShare" aria-label="复制链接" title="复制链接">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.4 13.3l7.2 4.2M15.6 6.5L8.4 10.7"/></svg>
                     </button>
