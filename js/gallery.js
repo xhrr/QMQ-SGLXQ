@@ -151,16 +151,26 @@
     /* ---------- 写真集列表 ---------- */
 
     let gallerySearchQuery = '';
+    let galleryYearFilter = '';
     let galleryMonthFilter = '';
 
     /** 日期展示：YYYY-MM-DD → YYYY.MM.DD（站内日期风格），无日期返回空 */
     const fmtAlbumDate = d => String(d || '').replace(/-/g, '.');
 
-    /** 图集可用的月份列表（降序，聚合自有数据） */
-    function albumMonths() {
-        const set = new Set();
-        albums.forEach(a => { if (/^\d{4}-\d{2}/.test(String(a.date || ''))) set.add(String(a.date).slice(0, 7)); });
-        return [...set].sort().reverse();
+    /** 时间筛选数据：年份降序；月份降序（选年=该年月份，全部=跨年月份并集） */
+    function filterYears() {
+        const years = new Set();
+        albums.forEach(a => { if (/^\d{4}-/.test(String(a.date || ''))) years.add(String(a.date).slice(0, 4)); });
+        return [...years].sort().reverse();
+    }
+    function filterMonths(year) {
+        const months = new Set();
+        albums.forEach(a => {
+            const d = String(a.date || '');
+            if (!/^\d{4}-\d{2}/.test(d)) return;
+            if (!year || d.slice(0, 4) === String(year)) months.add(d.slice(5, 7));
+        });
+        return [...months].sort().reverse();
     }
 
     /** 排序：基准=原有「新增在前」（数组倒序）；有日期的按日期降序提到前面，无日期垫底（保持新增在前次序） */
@@ -188,21 +198,21 @@
     function renderAlbumCards() {
         const q = gallerySearchQuery.trim().toLowerCase();
         const match = a => !q || [a.title, a.author].some(f => String(f || '').toLowerCase().includes(q));
-        const month = galleryMonthFilter;
         // 保留原索引：卡片链接 ?album= 的数字兜底必须是 gallery.albums 的真实下标（排序/筛选后仍不变）
         let shown = albums.map((a, idx) => ({ a, idx })).filter(x => match(x.a));
-        if (month) shown = shown.filter(x => String(x.a.date || '').slice(0, 7) === month);
+        if (galleryYearFilter) shown = shown.filter(x => String(x.a.date || '').slice(0, 4) === galleryYearFilter);
+        if (galleryMonthFilter) shown = shown.filter(x => String(x.a.date || '').slice(5, 7) === galleryMonthFilter);
         shown = sortAlbumEntries(shown);
 
         const countEl = document.getElementById('gallery-search-count');
-        if (countEl) countEl.textContent = (q || month) ? (shown.length + ' / ' + albums.length + ' 个写真集') : '';
+        if (countEl) countEl.textContent = (q || galleryYearFilter || galleryMonthFilter) ? (shown.length + ' / ' + albums.length + ' 个写真集') : '';
 
         if (q && !shown.length) {
             grid.innerHTML = '<p class="gallery-page__empty">未找到匹配的写真集</p>';
             return;
         }
-        if (month && !shown.length) {
-            grid.innerHTML = '<p class="gallery-page__empty">这个月份还没有写真集</p>';
+        if ((galleryYearFilter || galleryMonthFilter) && !shown.length) {
+            grid.innerHTML = '<p class="gallery-page__empty">这个时间段还没有写真集</p>';
             return;
         }
         if (!albums.length) {
@@ -233,6 +243,24 @@
         Array.prototype.forEach.call(grid.querySelectorAll('.album-card'), el => el.classList.add('is-visible'));
     }
 
+    /** 筛选行渲染（只重绘筛选容器，不动搜索框）；样式与 works-filter 文本筛选同语言 */
+    function filterRowHtml(items, active, rowCls) {
+        return `
+            <div class="gallery-filter__row${rowCls ? ' ' + rowCls : ''}">
+                <button type="button" class="gallery-filter__link${active === '' ? ' active' : ''}" data-year="" data-month="">全部</button>
+                ${items.map(v => `<button type="button" class="gallery-filter__link${active === v ? ' active' : ''}" data-year="${rowCls ? '' : v}" data-month="${rowCls ? v : ''}">${rowCls ? parseInt(v, 10) + '月' : v}</button>`).join('')}
+            </div>`;
+    }
+
+    function renderFilterRows() {
+        const box = document.getElementById('gallery-filter');
+        if (!box) return;
+        const years = filterYears();
+        if (!years.length) { box.innerHTML = ''; return; }
+        // 两层常驻：年份行 + 月份行（「全部」年份下月份为跨年并集）
+        box.innerHTML = filterRowHtml(years, galleryYearFilter, '') + filterRowHtml(filterMonths(galleryYearFilter), galleryMonthFilter, 'gallery-filter__row--month');
+    }
+
     function renderList() {
         masonryItemsData = null;
         masonryState = null;
@@ -245,22 +273,29 @@
                     <input type="search" id="gallery-search-input" placeholder="搜索写真集标题 / 作者…" autocomplete="off">
                     <span class="page-search__count" id="gallery-search-count"></span>
                 </div>
-                ${albumMonths().length ? `
-                <div class="gallery-months" id="gallery-months">
-                    <button type="button" class="gallery-months__chip${galleryMonthFilter === '' ? ' is-active' : ''}" data-month="">全部</button>
-                    ${albumMonths().map(m => `<button type="button" class="gallery-months__chip${galleryMonthFilter === m ? ' is-active' : ''}" data-month="${m}">${m.replace('-', '.')}</button>`).join('')}
-                </div>` : ''}
+                <div class="gallery-filter" id="gallery-filter"></div>
             `;
-            const monthsBox = document.getElementById('gallery-months');
-            if (monthsBox) {
-                monthsBox.addEventListener('click', e => {
-                    const chip = e.target.closest('[data-month]');
-                    if (!chip) return;
-                    galleryMonthFilter = chip.dataset.month;
-                    Array.prototype.forEach.call(monthsBox.querySelectorAll('.gallery-months__chip'), c => c.classList.toggle('is-active', c === chip));
-                    renderAlbumCards();
-                });
-            }
+            renderFilterRows();
+            const box = document.getElementById('gallery-filter');
+            box.addEventListener('click', e => {
+                const btn = e.target.closest('[data-year]');
+                if (!btn) return;
+                if (btn.dataset.year) {
+                    // 年份：切换后月份行随该年数据重绘，月份重置
+                    galleryYearFilter = galleryYearFilter === btn.dataset.year ? '' : btn.dataset.year;
+                    galleryMonthFilter = '';
+                    renderFilterRows();
+                } else if (btn.dataset.month) {
+                    galleryMonthFilter = galleryMonthFilter === btn.dataset.month ? '' : btn.dataset.month;
+                    Array.prototype.forEach.call(box.querySelectorAll('[data-month]'), b => b.classList.toggle('active', (b.dataset.month || '') === galleryMonthFilter));
+                } else {
+                    // 年份行「全部」
+                    galleryYearFilter = '';
+                    galleryMonthFilter = '';
+                    renderFilterRows();
+                }
+                renderAlbumCards();
+            });
         }
         renderAlbumCards();
         const input = document.getElementById('gallery-search-input');
