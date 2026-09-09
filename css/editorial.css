@@ -1814,6 +1814,28 @@ a.footer__credits-name:hover {
     box-shadow: none;
 }
 
+/* 灯箱缩放（gallery.js 双击/捏合/滚轮 + 拖拽平移）：
+   浏览器默认手势全部接管；缩放态光标切换 grab */
+.lightbox {
+    touch-action: none;
+}
+
+#lightbox-img {
+    transform-origin: 50% 50%;
+    cursor: zoom-in;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+}
+
+.lightbox--zoomed #lightbox-img {
+    cursor: grab;
+}
+
+.lightbox--zoomed #lightbox-img:active {
+    cursor: grabbing;
+}
+
 .lightbox__nav {
     position: absolute;
     top: 50%;
