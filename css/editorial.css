@@ -2789,3 +2789,14 @@ html.motion-gsap .hero.hero-enter .hero__content {
     0%, 100% { transform: scaleY(0.35); opacity: 0.35; }
     50%      { transform: scaleY(1); opacity: 1; }
 }
+
+/* ===================================================================
+   图集列表分批渲染哨兵（gallery.js）
+   每批 60 张，哨兵进入预取区即追加下一批；元素本身不可见、不占空间
+   =================================================================== */
+.gallery-list-sentinel {
+    height: 1px;
+    width: 100%;
+    margin-top: -1px;
+    pointer-events: none;
+}
