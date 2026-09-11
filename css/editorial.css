@@ -2944,18 +2944,44 @@ html.motion-gsap .hero.hero-enter .hero__content {
     color: var(--fg-60);
 }
 
-/* 大横向方块：每个群组独占一行、通栏展开 */
-.fan-groups__list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
+/* 说明支持 HTML 标签（经 sanitizeHtml 过滤）：补回链接/加粗/列表的基础排版，
+   否则会被全局 reset（a{text-decoration:none}）抹成普通文字。
+   链接默认不带下划线，悬停才出现（与站内 .hover-underline 习惯一致）。 */
+.fan-groups__desc a {
+    color: var(--fg);
+    text-decoration: none;
+    text-underline-offset: 3px;
+    transition: color var(--dur-fast) ease, text-decoration-color var(--dur-fast) ease;
+}
+.fan-groups__desc a:hover {
+    color: var(--fg-60);
+    text-decoration: underline;
+}
+.fan-groups__desc strong, .fan-groups__desc b { font-weight: 600; color: var(--fg); }
+.fan-groups__desc em, .fan-groups__desc i { font-style: italic; }
+.fan-groups__desc p { margin: 0 0 0.6em; }
+.fan-groups__desc p:last-child { margin-bottom: 0; }
+.fan-groups__desc ul, .fan-groups__desc ol { margin: 0.4em 0 0.6em; padding-left: 1.4em; }
+.fan-groups__desc li { margin-bottom: 0.25em; }
+.fan-groups__desc img { max-width: 100%; height: auto; }
+.fan-groups__desc code {
+    padding: 0.05em 0.35em;
+    font-size: 0.85em;
+    background: var(--fg-10);
 }
 
+/* 群组卡片：单行网格 = 主区 | 平台/地区 | 箭头；
+   有管理员时开第二行，管理员整行铺开（不再挤压群名、也不截断）。
+   ⚠️ 列用 minmax(0, 1fr)：1fr 的自动最小尺寸是 min-content，长群名会把轨道撑出容器造成横向溢出 */
 .fan-group {
     position: relative;
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "main meta arrow";
     align-items: center;
-    gap: 2rem;
+    column-gap: 2rem;
+    row-gap: 0.7rem;
+    min-width: 0;
     min-height: 7.5rem;
     padding: 1.75rem 2.25rem;
     border: 1px solid var(--fg-10);
@@ -2963,6 +2989,13 @@ html.motion-gsap .hero.hero-enter .hero__content {
     color: var(--fg);
     text-decoration: none;
     transition: border-color var(--dur-mid) ease, background-color var(--dur-mid) ease;
+}
+
+/* 有管理员 → 增加整行，管理员独占第二行 */
+.fan-group--has-admin {
+    grid-template-areas:
+        "main meta arrow"
+        "admin admin admin";
 }
 
 a.fan-group:hover {
@@ -2974,10 +3007,10 @@ a.fan-group:hover {
 
 /* 左侧主区：群名（大标题）+ 备注（副行） */
 .fan-group__main {
+    grid-area: main;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    flex: 1 1 auto;
     min-width: 0;
 }
 
@@ -2986,6 +3019,7 @@ a.fan-group:hover {
     font-size: clamp(1.3rem, 2.2vw, 1.9rem);
     letter-spacing: -0.02em;
     line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .fan-group__note {
@@ -2996,10 +3030,11 @@ a.fan-group:hover {
 
 /* 右侧信息区：平台徽标 + 所在地 */
 .fan-group__meta {
+    grid-area: meta;
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .fan-group__platform {
@@ -3020,8 +3055,31 @@ a.fan-group:hover {
     white-space: nowrap;
 }
 
+/* 群组管理员：整行铺开，长名换行显示、不截断 */
+.fan-group__admin {
+    grid-area: admin;
+    min-width: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    color: var(--fg-60);
+    overflow-wrap: anywhere;
+}
+
+/* 管理员个人主页链接（卡片可能整体是 <a>，故此处用 span + 事件委托，避免锚点嵌套） */
+.fan-group__admin-link {
+    color: var(--fg);
+    cursor: pointer;
+    border-bottom: 1px solid var(--fg-20);
+    transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease;
+}
+.fan-group__admin-link:hover {
+    border-bottom-color: var(--fg);
+}
+
 .fan-group__arrow {
-    flex: 0 0 auto;
+    grid-area: arrow;
+    justify-self: end;
     font-size: 1.25rem;
     line-height: 1;
     color: var(--fg-40);
@@ -3036,15 +3094,25 @@ a.fan-group:hover .fan-group__arrow {
 @media (max-width: 640px) {
     .fan-groups__list { gap: 0.75rem; }
     .fan-groups__desc { margin-top: -1.25rem; margin-bottom: 1.75rem; font-size: 0.85rem; }
+    /* 窄屏：主区独占一行，平台/地区另起一行自动换行，管理员行不变 */
     .fan-group {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "main arrow"
+            "meta meta";
+        align-items: center;
+        row-gap: 0.85rem;
+        column-gap: 1rem;
         min-height: 0;
         padding: 1.4rem 1.5rem;
     }
+    .fan-group--has-admin {
+        grid-template-areas:
+            "main arrow"
+            "meta meta"
+            "admin admin";
+    }
     .fan-group__meta { flex-wrap: wrap; gap: 0.6rem 1rem; }
-    .fan-group__arrow { position: absolute; top: 1.3rem; right: 1.5rem; }
 }
 
 /* 群组页：国家 / 地区两级点击筛选 */
