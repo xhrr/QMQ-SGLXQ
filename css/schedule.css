@@ -1,0 +1,160 @@
+/* ============================================================
+   schedule-demo.css — 行程页改版 demo：月历 + 倒计时（评审用）
+   只作用于 .sd- 前缀节点，替换原有 .plugin-list 列表
+   ============================================================ */
+
+/* 焦点卡：最近一场（与月历卡同宽同对齐 = 容器上限 + 居中，两卡右缘对齐；
+   注意 .section > * 的容器上限会被本文件同特异性规则覆盖，须显式写全） */
+.sd-focus{
+    display:flex;align-items:stretch;gap:0;
+    border:1px solid rgba(28,28,28,.14);border-radius:10px;
+    overflow:hidden;margin:0 auto 2.2rem;background:#fff;max-width:var(--container);
+}
+.sd-focus__count{
+    flex:none;width:190px;padding:1.6rem 1.4rem;
+    background:#1c1a18;color:#f9f8f6;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.2rem;
+}
+.sd-focus__num{
+    font-family:var(--font-serif);
+    font-size:clamp(2.4rem,4.5vw,3.4rem);line-height:1;font-weight:400;
+}
+.sd-focus__num small{font-size:.45em;margin-left:.15em}
+.sd-focus__cap{font-size:.72rem;letter-spacing:.28em;opacity:.65;margin-top:.5rem}
+.sd-focus__body{flex:1;padding:1.5rem 1.8rem;display:flex;flex-direction:column;justify-content:center;gap:.4rem}
+.sd-focus__date{font-size:.8rem;letter-spacing:.22em;color:rgba(28,28,28,.55)}
+.sd-focus__city{
+    display:inline-block;align-self:flex-start;
+    font-size:.72rem;letter-spacing:.18em;
+    border:1px solid rgba(28,28,28,.25);border-radius:999px;
+    padding:.22rem .8rem;margin:.35rem 0 .5rem;color:rgba(28,28,28,.72);
+}
+.sd-focus__event{font-family:var(--font-serif);font-size:1.35rem;line-height:1.45;color:#1c1a18}
+.sd-focus__link{margin-top:.6rem;font-size:.8rem}
+.sd-focus__link a{color:rgba(28,28,28,.6);text-decoration:none;border-bottom:1px solid rgba(28,28,28,.3);padding-bottom:1px}
+.sd-focus__link a:hover{color:#1c1a18;border-color:#1c1a18}
+
+/* 月历卡片 */
+.sd-cal{
+    border:1px solid rgba(28,28,28,.14);border-radius:10px;
+    background:#fff;padding:1.6rem 1.8rem 1.8rem;margin-bottom:2.2rem;
+}
+.sd-cal__head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.sd-cal__title{font-family:var(--font-serif);font-size:1.5rem;color:#1c1a18}
+.sd-cal__nav{display:flex;gap:.5rem}
+.sd-cal__nav button{
+    width:2.2rem;height:2.2rem;border-radius:50%;
+    border:1px solid rgba(28,28,28,.18);background:none;cursor:pointer;
+    font-size:1rem;color:rgba(28,28,28,.6);transition:.15s;
+}
+.sd-cal__nav button:hover{border-color:#1c1a18;color:#1c1a18}
+.sd-cal__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.sd-cal__wd{
+    text-align:center;font-size:.7rem;letter-spacing:.15em;
+    color:rgba(28,28,28,.42);padding:.5rem 0 .8rem;
+}
+.sd-cal__cell{
+    position:relative;z-index:0;aspect-ratio:1/0.82;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;
+    border-radius:8px;font-size:.92rem;color:rgba(28,28,28,.8);
+}
+.sd-cal__cell.is-out{color:rgba(28,28,28,.18)}
+.sd-cal__cell.is-today{box-shadow:inset 0 0 0 1.5px rgba(28,28,28,.4);font-weight:600}
+.sd-cal__cell.has-ev{cursor:pointer;font-weight:600;color:#1c1a18;transition:background .15s}
+.sd-cal__cell.has-ev::before{
+    content:"";position:absolute;z-index:-1;left:50%;top:50%;
+    width:min(74%,3.1rem);aspect-ratio:1/1;transform:translate(-50%,-50%);
+    border-radius:50%;background:#ecd9b8;
+}
+.sd-cal__cell.has-ev:hover::before{background:#e5cf9f}
+.sd-cal__cell.is-sel{background:#1c1a18;color:#f9f8f6}
+
+/* 当日行程 */
+.sd-day{margin-bottom:2.2rem}
+.sd-day__title{
+    font-family:var(--font-serif);font-size:1.15rem;color:#1c1a18;
+    margin-bottom:1rem;display:flex;align-items:center;gap:.8rem;
+}
+.sd-day__title::after{content:"";flex:1;height:1px;background:rgba(28,28,28,.12)}
+.sd-ev{
+    display:flex;gap:1.2rem;align-items:center;
+    padding:.9rem 1.2rem;border:1px solid rgba(28,28,28,.12);border-radius:8px;
+    background:#fff;margin-bottom:.6rem;transition:background .15s;
+}
+.sd-ev:hover{background:rgba(28,28,28,.025)}
+.sd-ev__time{flex:none;font-size:.85rem;letter-spacing:.1em;color:rgba(28,28,28,.55);font-family:var(--font-mono,monospace)}
+.sd-ev__city{flex:none;font-size:.75rem;letter-spacing:.12em;color:rgba(28,28,28,.6)}
+.sd-ev__text{flex:1;color:#1c1a18}
+.sd-ev__link{flex:none;font-size:.78rem}
+.sd-ev__link a{color:rgba(28,28,28,.55);text-decoration:none;border-bottom:1px solid rgba(28,28,28,.25)}
+.sd-ev__link a:hover{color:#1c1a18;border-color:#1c1a18}
+
+/* 过往行程（折叠） */
+.sd-past{margin-top:.5rem}
+.sd-past__toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    background:none;border:1px solid rgba(28,28,28,.16);border-radius:8px;
+    padding:.85rem 1.2rem;cursor:pointer;font-family:inherit;
+    font-size:.85rem;letter-spacing:.12em;color:rgba(28,28,28,.65);transition:.15s;
+}
+.sd-past__toggle:hover{border-color:rgba(28,28,28,.4);color:#1c1a18}
+.sd-past__body{display:none;margin-top:1rem}
+.sd-past.is-open .sd-past__body{display:block}
+.sd-past__month{
+    display:flex;align-items:center;gap:.9rem;
+    font-family:var(--font-serif);font-size:1rem;color:#1c1a18;
+    letter-spacing:.05em;margin:1.7rem 0 .5rem;
+}
+.sd-past__month::after{content:"";flex:1;height:1px;background:rgba(28,28,28,.1)}
+.sd-past__row{
+    display:flex;gap:1rem;align-items:center;
+    padding:.65rem .9rem;border-radius:8px;font-size:.92rem;
+    transition:background .15s;
+}
+.sd-past__row:hover{background:rgba(28,28,28,.045)}
+.sd-past__d{flex:none;width:3.1rem;color:rgba(28,28,28,.55);font-size:.84rem;letter-spacing:.06em}
+.sd-past__c{flex:none;font-size:.7rem;letter-spacing:.12em;color:rgba(28,28,28,.6);
+    border:1px solid rgba(28,28,28,.18);border-radius:999px;padding:.14rem .65rem}
+.sd-past__e{flex:1;color:rgba(28,28,28,.85)}
+.sd-past__row a{color:rgba(28,28,28,.35);text-decoration:none;font-size:.9rem;transition:color .15s}
+.sd-past__row a:hover{color:#1c1a18}
+
+@media (max-width:760px){
+    .sd-past__row{flex-wrap:wrap;gap:.4rem .8rem}
+    .sd-ev{flex-wrap:wrap;gap:.4rem .9rem;align-items:baseline}
+    /* 焦点卡移动端：黑块改为顶部横向状态条。窄屏保留左窄列会把「就是今天」
+       挤成 3+1 折行（112px 装不下 1.5rem 四字），竖排又对英文/倒计时数字不友好，
+       故整卡改上下结构，黑条内横排一行，信息区随之更紧凑 */
+    .sd-focus{flex-direction:column}
+    .sd-focus__count{
+        width:auto;flex-direction:row;align-items:baseline;justify-content:flex-start;
+        gap:.65rem;padding:.85rem 1.1rem;
+    }
+    .sd-focus__num{font-size:1.2rem;white-space:nowrap}
+    .sd-focus__num small{font-size:.55em}
+    .sd-focus__cap{font-size:.6rem;letter-spacing:.24em;margin-top:0}
+    .sd-focus__body{padding:1.05rem 1.1rem 1.2rem;gap:.3rem}
+    .sd-focus__event{font-size:1.05rem}
+    .sd-cal{padding:1.1rem 1rem 1.3rem}
+}
+
+/* 首页预览变体：与行程页同宽（容器通栏），仅保留更紧凑的内距/字号 */
+.sd-focus--home{max-width:var(--container)}
+.sd-focus--home .sd-focus__count{width:150px;padding:1.2rem 1rem}
+.sd-focus--home .sd-focus__num{font-size:1.55rem;letter-spacing:.02em}
+.sd-focus--home .sd-focus__body{padding:1.1rem 1.4rem}
+.sd-focus--home .sd-focus__event{font-size:1.12rem}
+.sd-home-list{margin:0.8rem 0 0}
+@media (max-width:760px){
+  .sd-focus--home{max-width:100%}
+  /* 首页预览同走顶部状态条；--home 基础规则的 width:150px 优先级更高，须显式放开为通栏 */
+  .sd-focus--home .sd-focus__count{width:auto;padding:.75rem 1rem;gap:.55rem}
+  .sd-focus--home .sd-focus__num{font-size:1.1rem}
+  .sd-focus--home .sd-focus__cap{font-size:.56rem}
+  .sd-focus--home .sd-focus__body{padding:1rem 1.05rem 1.1rem}
+  .sd-focus--home .sd-focus__event{font-size:.98rem}
+}
+
+
+/* 选中态（深色块）本身就是强调，隐藏其上的金色圆底 */
+.sd-cal__cell.is-sel.has-ev::before{display:none}
